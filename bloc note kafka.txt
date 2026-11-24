@@ -1,0 +1,44 @@
+#download 
+https://archive.apache.org/dist/kafka/0.8.2.2/kafka_2.10-0.8.2.2.tgz
+
+#unzip
+tar -xzf kafka_2.10-0.8.2.2.tgz
+
+#open kafka folder
+cd kafka_2.10-0.8.2.2
+
+
+#close zookeeper from cloudera manager
+
+/*open another terminal*/
+
+sudo su
+service hadoop-hdfs-namenode start
+ sudo /home/cloudera/cloudera-manager -- express -- force
+
+
+
+#start zookeeper
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+#start kafka 
+#open another terminal
+bin/kafka-server-start.sh config/server.properties
+
+#check the logs
+#open another terminal
+tail -f logs/server.log
+
+#create topic
+#open another terminal
+bin/kafka-topics.sh --create --zookeeper localhost: 2181 --replication-factor 1 --partitions 1 --topic my-topic
+
+#list topics
+bin/kafka-topics.sh --list --zookeeper localhost:2181
+
+#start producer
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic my-topic
+
+#start consumer
+#open another terminal
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 -topic my-topic --from-beginning
