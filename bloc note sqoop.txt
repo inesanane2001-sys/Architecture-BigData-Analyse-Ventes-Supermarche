@@ -1,0 +1,102 @@
+# Connect to MySQL database as root user with password authentication
+mysql -u root -p
+
+# Create a new database called 'supermarket_data' to store e-commerce data
+CREATE DATABASE supermarket_data;
+
+# Switch to the newly created database for subsequent operations
+USE supermarket_data;
+
+# Create a table structure to store user activity data with various metrics
+# This defines columns for user behavior, engagement, and demographic information
+CREATE TABLE supermarket_sales (
+Invoice VARCHAR(20),
+StockCode VARCHAR(20),
+Description TEXT,
+Quantity INT,
+InvoiceDate DATETIME,
+Price DECIMAL(10,2),
+CustomerID INT,
+Country VARCHAR(100)
+);
+
+# Import data from a CSV file into the user_activity table
+# The file is comma-delimited and the first line (headers) is skipped
+LOAD DATA LOCAL INFILE '/home/cloudera/Downloads/ecommerce.csv'
+INTO TABLE supermarket_sales
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES;
+
+# Verify the data import by displaying the first 5 rows of the table
+SELECT * FROM supermarket_sales LIMIT 5;
+
+# Edit the YARN configuration file to enable MapReduce shuffle service
+# This is critical for Sqoop jobs which rely on MapReduce to function
+sudo nano /etc/hadoop/conf/yarn-site.xml
+
+# Add these configuration properties to enable the MapReduce shuffle service in YARN
+# This fixes the "auxService:mapreduce_shuffle does not exist" error 
+<property>
+  <name>yarn.nodemanager.aux-services</name>
+  <value>mapreduce_shuffle</value>
+</property>
+<property>
+  <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+  <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+</property>
+/**** but d importer par sqoop*///
+
+# Start the Hadoop services required for HDFS, YARN, and MapReduce functionality
+# These services must be running for Sqoop to work properly
+sudo service hadoop-hdfs-namenode start
+sudo service hadoop-hdfs-datanode start
+sudo service hadoop-yarn-resourcemanager start
+sudo service hadoop-yarn-nodemanager start
+sudo service hadoop-mapreduce-historyserver start
+sudo -u hdfs hdfs dfsadmin -safemode leave
+
+# Execute Sqoop import to transfer data from MySQL to HDFS
+# Uses direct mode for faster import and specifies a single mapper
+# The data will be stored in the specified HDFS directory
+sqoop import --connect jdbc:mysql://localhost/supermarket_data --username root --password cloudera --table supermarket_sales --target-dir /user/root/supermarket_data --m 1 --direct
+
+
+#verification :
+
+sudo service hadoop-hdfs-namenode start
+sudo service hadoop-hdfs-datanode start
+sudo service hadoop-yarn-resourcemanager start
+sudo service hadoop-yarn-nodemanager start
+sudo service hadoop-mapreduce-historyserver start
+sudo -u hdfs hdfs dfsadmin -safemode leave
+hdfs dfs -ls /user/root/supermarket_data
+hdfs dfs -cat /user/root/supermarket_data/part-m-00000   (si ne marche pas mode off)
+
+
+/////////////////////////////////////////////////////////////////////
+
+
+hdfs dfs -ls /user/root/supermarket_data
+
+hdfs dfs -cat /user/root/supermarket_data/part-m-00000
+
+sudo service hadoop-hdfs-namenode start
+
+show databases;
+supermarket_data
+use supermarket_data;
+show tables;
+select * from marketsupermarket_data limit 5;
+marketsupermarket_data
+
+sqoop import --connect jdbc:mysql://localhost/supermarket_data --username root --password cloudera --table marketsupermarket_sales --target-dir /user/cloudera/supermarket_data --m 1 --direct
+
+///////////////////////////////////////////////////////////////////
+sudo -u hdfs hdfs dfsadmin -safemode leave
+hdfs dfsadmin -safemode get
+
+https://downloads.cloudera.com/demo_vm/virtualbox/cloudera-quickstart-vm-5.13.0-0-virtualbox.zip
+sudo /home/cloudera/cloudera-manager --express --force
+
+cd Downloads
